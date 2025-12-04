@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Guardian.Services;
+using System.Threading.Tasks;
+using Guardian.Models;
 
 namespace Guardian.Controllers.v1;
 
@@ -7,10 +10,18 @@ namespace Guardian.Controllers.v1;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class HealthController : ControllerBase
 {
+    private readonly IHealthServiceV1 _service;
+
+    public HealthController(IHealthServiceV1 service)
+    {
+        _service = service;
+    }
+
     // GET api/v1/health
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        return Ok(new { status = "Healthy", version = "1.0" });
+        HealthResponse res = await _service.GetHealthAsync();
+        return Ok(res);
     }
 }
