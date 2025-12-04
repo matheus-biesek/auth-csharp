@@ -20,6 +20,19 @@
 
 # Test results
 TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Code coverage reports
+opencover/
+codecov/
 
 # Environment files
 .env
+.env.local
+
+# IDE generated files
+*.cache
+*.csproj.nuget.*
+
