@@ -1,4 +1,3 @@
-[# 0001]
 using Microsoft.AspNetCore.Mvc;
 using Guardian.Services;
 using System.Threading.Tasks;
