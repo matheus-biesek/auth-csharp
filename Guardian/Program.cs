@@ -22,6 +22,8 @@ builder.Services.AddVersionedApiExplorer(options =>
 
 builder.Services.AddSwaggerGen();
 builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+// Register database connectivity service
+builder.Services.AddScoped<Guardian.Services.IDatabaseService, Guardian.Services.DatabaseService>();
 
 var app = builder.Build();
 
