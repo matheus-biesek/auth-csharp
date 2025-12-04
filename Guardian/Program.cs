@@ -25,8 +25,8 @@ builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 // Register database connectivity service
 builder.Services.AddScoped<Guardian.Services.IDatabaseService, Guardian.Services.DatabaseService>();
 // Register versioned health services
-builder.Services.AddScoped<Guardian.Services.IHealthServiceV1, Guardian.Services.HealthServiceV1>();
-builder.Services.AddScoped<Guardian.Services.IHealthServiceV2, Guardian.Services.HealthServiceV2>();
+builder.Services.AddScoped<Guardian.Services.V1.IHealthServiceV1, Guardian.Services.V1.HealthServiceV1>();
+builder.Services.AddScoped<Guardian.Services.V2.IHealthServiceV2, Guardian.Services.V2.HealthServiceV2>();
 
 var app = builder.Build();
 
