@@ -5,9 +5,9 @@ namespace Guardian.Services.V2;
 
 public class HealthServiceV2 : IHealthServiceV2
 {
-    private readonly Guardian.Services.IDatabaseService _db;
+    private readonly Guardian.Services.Common.IDatabaseService _db;
 
-    public HealthServiceV2(Guardian.Services.IDatabaseService db)
+    public HealthServiceV2(Guardian.Services.Common.IDatabaseService db)
     {
         _db = db;
     }

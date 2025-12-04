@@ -22,8 +22,8 @@ builder.Services.AddVersionedApiExplorer(options =>
 
 builder.Services.AddSwaggerGen();
 builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
-// Register database connectivity service
-builder.Services.AddScoped<Guardian.Services.IDatabaseService, Guardian.Services.DatabaseService>();
+// Register database connectivity service (moved to Services.Common)
+builder.Services.AddScoped<Guardian.Services.Common.IDatabaseService, Guardian.Services.Common.DatabaseService>();
 // Register versioned health services
 builder.Services.AddScoped<Guardian.Services.V1.IHealthServiceV1, Guardian.Services.V1.HealthServiceV1>();
 builder.Services.AddScoped<Guardian.Services.V2.IHealthServiceV2, Guardian.Services.V2.HealthServiceV2>();
