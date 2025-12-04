@@ -1,0 +1,25 @@
+# Ignore build outputs
+**/bin/
+**/obj/
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+
+# User files
+*.user
+*.suo
+
+# Log files
+*.log
+
+# NuGet
+*.nupkg
+
+# Test results
+TestResults/
+
+# Environment files
+.env
