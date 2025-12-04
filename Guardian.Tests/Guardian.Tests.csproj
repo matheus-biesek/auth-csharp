@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Guardian.csproj" />
+    <ProjectReference Include="Guardian/Guardian.csproj" />
   </ItemGroup>
 
 </Project>
