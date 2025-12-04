@@ -36,3 +36,5 @@ codecov/
 *.cache
 *.csproj.nuget.*
 
+
+.fake
