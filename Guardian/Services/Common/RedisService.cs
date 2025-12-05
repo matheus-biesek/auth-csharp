@@ -69,5 +69,24 @@ public class RedisService : IRedisService
             return false;
         }
     }
+
+    public async Task<long> IncrementAsync(string key, long value = 1, TimeSpan? expiration = null)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            var result = await db.StringIncrementAsync(key, value);
+            if (expiration.HasValue)
+            {
+                await db.KeyExpireAsync(key, expiration.Value);
+            }
+            return (long)result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error incrementing Redis key {Key}", key);
+            return -1;
+        }
+    }
 }
 

@@ -23,6 +23,10 @@ builder.Services.AddGuardianIdentity();
 // Redis
 builder.Services.AddGuardianRedis(builder.Configuration);
 
+// Rate limiting (middleware customizado que usa Redis)
+// Configuração padrão em appsettings: RateLimiting:RequestsPerWindow (int), RateLimiting:WindowSeconds (int)
+builder.Services.AddSingleton<Guardian.Middleware.GuardianRateLimitMiddleware>();
+
 // JWT Authentication
 builder.Services.AddGuardianJwtAuthentication(builder.Configuration);
 
@@ -46,6 +50,9 @@ app.UseHttpsRedirection();
 // UseAuthentication() valida JWT (lê de cookies ou header Authorization)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Rate limiting: inserir antes de middlewares sensíveis para proteger endpoints
+app.UseMiddleware<Guardian.Middleware.GuardianRateLimitMiddleware>();
 
 // CSRF Validation (proteção adicional para requisições sensíveis)
 app.UseGuardianMiddleware();
