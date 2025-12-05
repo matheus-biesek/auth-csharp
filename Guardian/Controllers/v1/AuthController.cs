@@ -1,5 +1,6 @@
 using Guardian.Models.Auth.v1;
 using Guardian.Services.v1;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Guardian.Controllers.v1;
@@ -26,9 +27,10 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Authenticate user and return access token, CSRF token, and refresh token (via HttpOnly cookie).
     /// </summary>
-    /// <param name="request">Login credentials (email and password)</param>
+    /// <param name="request">Login credentials (username and password)</param>
     /// <returns>Access token and CSRF token in response body, refresh token in HttpOnly cookie</returns>
     [HttpPost("login")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -82,9 +84,11 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// Refresh the access token using the refresh token from HttpOnly cookie.
+    /// Refresh token não é validado pelo framework, possui validação própria.
     /// </summary>
     /// <returns>New access token and CSRF token</returns>
     [HttpPost("refresh")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh()
@@ -135,6 +139,7 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <returns>Success message</returns>
     [HttpPost("logout")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout()
     {

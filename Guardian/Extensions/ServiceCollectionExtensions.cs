@@ -60,16 +60,29 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddGuardianIdentity(this IServiceCollection services)
     {
-        services.AddIdentity<IdentityUser, IdentityRole>(options =>
+        // Registra Identity com User e Role customizados
+        // Agora usando AddIdentity (não apenas AddIdentityCore) para ter suporte a roles
+        services.AddIdentity<Guardian.Models.User, Guardian.Models.Role>(options =>
         {
+            // Configuração de senha
             options.Password.RequiredLength = 6;
             options.Password.RequireDigit = false;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
+
+            // Configuração de usuário
+            options.User.RequireUniqueEmail = true; // Email único
+            options.SignIn.RequireConfirmedEmail = false;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+
+            // Configuração de lockout
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
+        .AddDefaultTokenProviders(); // Necessário para reset de senha, etc.
 
         return services;
     }
@@ -107,6 +120,23 @@ public static class ServiceCollectionExtensions
                 ValidAudience = jwtSettings["Audience"] ?? "Guardian.Client",
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
+            };
+
+            // Configurar para ler token de cookies quando não estiver no header Authorization
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    // Se não há token no header Authorization, tenta ler do cookie
+                    if (string.IsNullOrEmpty(context.Token))
+                    {
+                        if (context.Request.Cookies.TryGetValue("accessToken", out var cookieToken))
+                        {
+                            context.Token = cookieToken;
+                        }
+                    }
+                    return System.Threading.Tasks.Task.CompletedTask;
+                }
             };
         });
 

@@ -32,7 +32,7 @@ public class CsrfValidationMiddleware
 
         // CSRF validation só faz sentido para requisições autenticadas
         // Se o usuário não estiver autenticado, pula a validação CSRF
-        // (a validação de autenticação já foi feita pelos middlewares anteriores)
+        // (a validação de autenticação já foi feita pelo UseAuthentication() do framework)
         if (context.User?.Identity?.IsAuthenticated != true)
         {
             await _next(context);

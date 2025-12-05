@@ -26,16 +26,11 @@ public static class WebApplicationExtensions
 
     public static WebApplication UseGuardianMiddleware(this WebApplication app)
     {
-        // Authentication Pipeline Middleware (3-stage validation split into smaller middleware)
-        // Order matters: 
-        // 1. FastClaims - validação rápida (sem assinatura, apenas expiração)
-        // 2. JwtValidation - validação completa criptográfica do token (autenticação)
-        // 3. CsrfValidation - valida CSRF token (apenas para requisições autenticadas e sensíveis)
-        // 4. RoleAuthorization - valida roles/permissões (precisa de autenticação)
-        app.UseMiddleware<FastClaimsMiddleware>();
-        app.UseMiddleware<JwtValidationMiddleware>();
+        // CSRF Validation Middleware
+        // Valida CSRF token em requisições sensíveis (POST, PUT, DELETE, PATCH)
+        // Compara token do cookie com token do header X-CSRF-Token
+        // Deve ser executado APÓS UseAuthentication() para garantir que o usuário está autenticado
         app.UseMiddleware<CsrfValidationMiddleware>();
-        app.UseMiddleware<RoleAuthorizationMiddleware>();
 
         return app;
     }

@@ -42,13 +42,13 @@ app.UseGuardianSwagger();
 
 app.UseHttpsRedirection();
 
-// Authentication Pipeline Middleware (3-stage validation split into smaller middleware)
-// Order matters: FastClaims => JwtValidation => RoleAuthorization
-app.UseGuardianMiddleware();
-
-// Authentication & Authorization middleware
+// Authentication & Authorization (Framework ASP.NET Core)
+// UseAuthentication() valida JWT (lê de cookies ou header Authorization)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// CSRF Validation (proteção adicional para requisições sensíveis)
+app.UseGuardianMiddleware();
 
 app.MapControllers();
 

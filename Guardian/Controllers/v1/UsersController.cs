@@ -1,4 +1,4 @@
-using Guardian.Middleware;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Guardian.Controllers.v1;
@@ -16,26 +16,27 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get current user profile - requires authentication (Stage 1+2 only, faster)
+    /// Get current user profile - requires authentication
     /// </summary>
     [HttpGet("profile")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult GetProfile()
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
 
         _logger.LogInformation("Profile accessed by user {UserId}", userId);
 
-        return Ok(new { userId, email, message = "Validação com Stage 1+2 (Fast)" });
+        return Ok(new { userId, username, message = "Autenticação via framework ASP.NET Core" });
     }
 
     /// <summary>
     /// Get all users - requires Admin role
     /// </summary>
     [HttpGet]
-    [RequireRole("Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -46,15 +47,15 @@ public class UsersController : ControllerBase
         return Ok(new
         {
             users = new[] { "user1@example.com", "user2@example.com" },
-            message = "Validação completa: Stage 1+2+3"
+            message = "Autorização via framework ASP.NET Core"
         });
     }
 
     /// <summary>
-    /// Delete user - requires Admin role (most restrictive)
+    /// Delete user - requires Admin role
     /// </summary>
     [HttpDelete("{userId}")]
-    [RequireRole("Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

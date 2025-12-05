@@ -16,7 +16,7 @@ public class TokenService : ITokenService
         _logger = logger;
     }
 
-    public string GenerateAccessToken(string userId, string email, int expirationMinutes = 15)
+    public string GenerateAccessToken(string userId, string username, IEnumerable<string>? roles = null, int expirationMinutes = 15)
     {
         try
         {
@@ -28,12 +28,21 @@ public class TokenService : ITokenService
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Name, username), // Username como Name claim
                 new Claim("sub", userId),
             };
+
+            // Adiciona roles ao token para que [Authorize(Roles = "...")] funcione
+            if (roles != null)
+            {
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
@@ -60,39 +69,6 @@ public class TokenService : ITokenService
     public string GenerateRefreshToken()
     {
         return Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
-    }
-
-    public ClaimsPrincipal? ValidateToken(string token)
-    {
-        try
-        {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-            var issuer = jwtSettings["Issuer"] ?? "Guardian.API";
-            var audience = jwtSettings["Audience"] ?? "Guardian.Client";
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ValidateIssuer = true,
-                ValidIssuer = issuer,
-                ValidateAudience = true,
-                ValidAudience = audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            }, out SecurityToken validatedToken);
-
-            return principal;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Invalid token validation attempt");
-            return null;
-        }
     }
 }
 

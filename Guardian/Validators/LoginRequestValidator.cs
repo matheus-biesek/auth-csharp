@@ -7,11 +7,11 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
     {
-        RuleFor(x => x.Email)
+        RuleFor(x => x.Username)
             .NotEmpty()
-            .WithMessage("Email é obrigatório")
-            .EmailAddress()
-            .WithMessage("Email deve ser um endereço válido");
+            .WithMessage("Username é obrigatório")
+            .MinimumLength(3)
+            .WithMessage("Username deve ter no mínimo 3 caracteres");
 
         RuleFor(x => x.Password)
             .NotEmpty()
