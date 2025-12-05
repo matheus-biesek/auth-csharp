@@ -1,6 +1,7 @@
 using Guardian.Models;
 using Guardian.Models.Auth.v1;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Guardian.Services.v1;
 
@@ -243,6 +244,37 @@ public class AuthServiceV1 : IAuthServiceV1
         {
             _logger.LogError(ex, "Error revoking refresh token for user: {Email}", email);
             return (false, "Erro ao revogar token");
+        }
+    }
+
+    public async Task<(bool success, IEnumerable<RefreshTokenInfo>? tokens, string? error)> ListRefreshTokensAsync()
+    {
+        try
+        {
+            var activeUsers = await _userManager.Users
+                .Where(u => u.IsActive)
+                .ToListAsync();
+
+            var result = new List<RefreshTokenInfo>();
+
+            foreach (var user in activeUsers)
+            {
+                var storedToken = await _redisService.GetAsync($"refresh_token:{user.Id}");
+                if (!string.IsNullOrEmpty(storedToken))
+                {
+                    result.Add(new RefreshTokenInfo
+                    {
+                        Email = user.Email ?? string.Empty
+                    });
+                }
+            }
+
+            return (true, result, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing refresh tokens");
+            return (false, null, "Erro ao listar refresh tokens");
         }
     }
 }

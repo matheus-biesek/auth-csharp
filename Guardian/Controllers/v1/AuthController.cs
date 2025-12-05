@@ -217,6 +217,34 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Lista refresh tokens ativos no sistema (apenas Admin).
+    /// Retorna o email do usuário e o refresh token armazenado no Redis.
+    /// </summary>
+    [HttpGet("refresh-tokens")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(IEnumerable<Guardian.Models.Auth.v1.RefreshTokenInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListRefreshTokens()
+    {
+        var (success, tokens, error) = await _authService.ListRefreshTokensAsync();
+
+        if (!success)
+        {
+            _logger.LogWarning("Failed to list refresh tokens: {Error}", error);
+            return BadRequest(new { message = error });
+        }
+
+        if (tokens == null || !tokens.Any())
+        {
+            return NoContent();
+        }
+
+        return Ok(tokens);
+    }
+
+    /// <summary>
     /// Logout user by invalidating refresh token.
     /// </summary>
     /// <returns>Success message</returns>
