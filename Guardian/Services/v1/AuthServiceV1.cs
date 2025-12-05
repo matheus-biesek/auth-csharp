@@ -26,22 +26,86 @@ public class AuthServiceV1 : IAuthServiceV1
         _logger = logger;
     }
 
+    public async Task<(bool success, RegisterResponse? response, string? error)> RegisterAsync(RegisterRequest request)
+    {
+        try
+        {
+            // Verifica se email já existe
+            var existingEmailUser = await _userManager.FindByEmailAsync(request.Email);
+            if (existingEmailUser != null)
+            {
+                _logger.LogWarning("Registration attempt with existing email: {Email}", request.Email);
+                return (false, null, "Email já registrado no sistema");
+            }
+
+            // Verifica se username já existe
+            var existingUsernameUser = await _userManager.FindByNameAsync(request.Username);
+            if (existingUsernameUser != null)
+            {
+                _logger.LogWarning("Registration attempt with existing username: {Username}", request.Username);
+                return (false, null, "Nome de usuário já está em uso");
+            }
+
+            // Cria novo usuário
+            var user = new User
+            {
+                UserName = request.Username,
+                Email = request.Email,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Cria usuário com hash de senha
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("User creation failed: {Errors}", errors);
+                return (false, null, $"Erro ao criar usuário: {errors}");
+            }
+
+            // Adiciona role padrão (User)
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+            if (!roleResult.Succeeded)
+            {
+                _logger.LogError("Failed to assign default role to user {UserId}", user.Id);
+                // Não falha aqui, apenas loga
+            }
+
+            _logger.LogInformation("User registered successfully: {UserId} ({Email})", user.Id, user.Email);
+
+            var response = new RegisterResponse
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Message = "Usuário registrado com sucesso"
+            };
+
+            return (true, response, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during user registration for email: {Email}", request.Email);
+            return (false, null, "Erro interno do servidor");
+        }
+    }
+
     public async Task<(bool success, string? accessToken, string? refreshToken, string? csrfToken, LoginResponse? response, string? error)> LoginAsync(LoginRequest request)
     {
         try
         {
-            // Busca usuário por username (Email será buscado depois)
-            var user = await _userManager.FindByNameAsync(request.Username);
+            // Busca usuário por email
+            var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                _logger.LogWarning("Login attempt for non-existent user: {Username}", request.Username);
+                _logger.LogWarning("Login attempt for non-existent user: {Email}", request.Email);
                 return (false, null, null, null, null, "Credenciais inválidas");
             }
 
             // Valida se usuário está ativo
             if (!user.IsActive)
             {
-                _logger.LogWarning("Login attempt for inactive user: {Username}", request.Username);
+                _logger.LogWarning("Login attempt for inactive user: {Email}", request.Email);
                 return (false, null, null, null, null, "Usuário inativo");
             }
 
@@ -49,7 +113,7 @@ public class AuthServiceV1 : IAuthServiceV1
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
             if (!isPasswordValid)
             {
-                _logger.LogWarning("Failed login attempt for user: {Username}", request.Username);
+                _logger.LogWarning("Failed login attempt for user: {Email}", request.Email);
                 return (false, null, null, null, null, "Credenciais inválidas");
             }
 
@@ -79,7 +143,7 @@ public class AuthServiceV1 : IAuthServiceV1
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during login for user: {Username}", request.Username);
+            _logger.LogError(ex, "Error during login for user: {Email}", request.Email);
             return (false, null, null, null, null, "Erro interno do servidor");
         }
     }

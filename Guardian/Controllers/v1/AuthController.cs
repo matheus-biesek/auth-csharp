@@ -25,6 +25,43 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Register a new user in the system (no authentication required).
+    /// </summary>
+    /// <param name="request">Registration data (email, username, password)</param>
+    /// <returns>User ID and success message</returns>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var (success, response, error) = await _authService.RegisterAsync(request);
+
+        if (!success)
+        {
+            _logger.LogWarning("Registration failed: {Error}", error);
+
+            // Conflict se email ou username já existem
+            if (error!.Contains("já registrado") || error.Contains("já está em uso"))
+            {
+                return Conflict(new { message = error });
+            }
+
+            return BadRequest(new { message = error });
+        }
+
+        _logger.LogInformation("User registered successfully: {UserId}", response!.UserId);
+
+        return CreatedAtAction(nameof(Register), new { userId = response.UserId }, response);
+    }
+
+    /// <summary>
     /// Authenticate user and return access token, CSRF token, and refresh token (via HttpOnly cookie).
     /// </summary>
     /// <param name="request">Login credentials (username and password)</param>
