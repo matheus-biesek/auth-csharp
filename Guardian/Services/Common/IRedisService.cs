@@ -6,4 +6,5 @@ public interface IRedisService
     Task<string?> GetAsync(string key);
     Task<bool> DeleteAsync(string key);
     Task<bool> ExistsAsync(string key);
+    Task<long> IncrementAsync(string key, long value = 1, TimeSpan? expiration = null);
 }
