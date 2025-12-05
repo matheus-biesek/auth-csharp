@@ -24,4 +24,10 @@ public interface IAuthServiceV1
     /// Remove tanto o token armazenado em Redis quanto o mapping de lookup.
     /// </summary>
     Task<(bool success, string? error)> RevokeRefreshTokenAsync(string email);
+
+    /// <summary>
+    /// Lista todos os refresh tokens ativos no sistema com o email do usuário associado.
+    /// Retorna apenas usuários marcados como ativos que possuam um refresh token armazenado.
+    /// </summary>
+    Task<(bool success, IEnumerable<Guardian.Models.Auth.v1.RefreshTokenInfo>? tokens, string? error)> ListRefreshTokensAsync();
 }
