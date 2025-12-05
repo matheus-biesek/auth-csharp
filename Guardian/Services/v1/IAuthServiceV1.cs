@@ -18,4 +18,10 @@ public interface IAuthServiceV1
     /// Renova o access token usando o refresh token (com rotação de tokens).
     /// </summary>
     Task<(bool success, string? newAccessToken, string? newRefreshToken, string? newCsrfToken, string? error)> RefreshTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// Revoga o refresh token de um usuário (apenas admin).
+    /// Remove tanto o token armazenado em Redis quanto o mapping de lookup.
+    /// </summary>
+    Task<(bool success, string? error)> RevokeRefreshTokenAsync(string email);
 }
