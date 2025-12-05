@@ -127,6 +127,14 @@ public class AuthServiceV1 : IAuthServiceV1
             var refreshToken = _tokenService.GenerateRefreshToken();
             var csrfToken = _tokenService.GenerateCsrfToken();
 
+            // Garantir que exista apenas UM refresh token ativo por usuário.
+            // Se houver um token antigo armazenado, remover seu lookup para evitar keys órfãs.
+            var existingToken = await _redisService.GetAsync($"refresh_token:{user.Id}");
+            if (!string.IsNullOrEmpty(existingToken) && existingToken != refreshToken)
+            {
+                await _redisService.DeleteAsync($"refresh_lookup:{existingToken}");
+            }
+
             // Armazena refresh token em Redis com lookup reverso (7 dias)
             await _redisService.SetAsync($"refresh_token:{user.Id}", refreshToken, TimeSpan.FromDays(7));
             await _redisService.SetAsync($"refresh_lookup:{refreshToken}", user.Id, TimeSpan.FromDays(7));
