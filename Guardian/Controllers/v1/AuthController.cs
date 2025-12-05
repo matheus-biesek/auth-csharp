@@ -172,6 +172,51 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Revoke refresh token of a user (admin only).
+    /// Removes the token from Redis, forcing the user to re-login.
+    /// </summary>
+    /// <param name="request">Email do usuário cuja sessão será revogada</param>
+    /// <returns>Success message</returns>
+    [HttpPost("revoke-token")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var (success, error) = await _authService.RevokeRefreshTokenAsync(request.Email);
+
+        if (!success)
+        {
+            _logger.LogWarning("Token revocation failed for {Email}: {Error}", request.Email, error);
+
+            if (error!.Contains("não encontrado"))
+            {
+                return NotFound(new { message = error });
+            }
+
+            if (error.Contains("não possui"))
+            {
+                return BadRequest(new { message = error });
+            }
+
+            return BadRequest(new { message = error });
+        }
+
+        _logger.LogInformation("Admin {AdminId} revoked refresh token for user {Email}", 
+            User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, request.Email);
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Logout user by invalidating refresh token.
     /// </summary>
     /// <returns>Success message</returns>

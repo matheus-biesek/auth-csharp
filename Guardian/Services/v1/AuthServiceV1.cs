@@ -209,4 +209,40 @@ public class AuthServiceV1 : IAuthServiceV1
             return (false, null, null, null, "Erro ao renovar token");
         }
     }
+
+    public async Task<(bool success, string? error)> RevokeRefreshTokenAsync(string email)
+    {
+        try
+        {
+            // Busca usuário por email
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                _logger.LogWarning("Revoke attempt for non-existent user: {Email}", email);
+                return (false, "Usuário não encontrado");
+            }
+
+            // Busca refresh token armazenado em Redis
+            var storedToken = await _redisService.GetAsync($"refresh_token:{user.Id}");
+            
+            if (string.IsNullOrEmpty(storedToken))
+            {
+                _logger.LogInformation("Revoke attempt for user with no active refresh token: {Email}", email);
+                return (false, "Usuário não possui refresh token ativo");
+            }
+
+            // Remove token e lookup mapping do Redis
+            await _redisService.DeleteAsync($"refresh_token:{user.Id}");
+            await _redisService.DeleteAsync($"refresh_lookup:{storedToken}");
+
+            _logger.LogInformation("Refresh token revoked for user: {UserId} ({Email}) by admin", user.Id, email);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revoking refresh token for user: {Email}", email);
+            return (false, "Erro ao revogar token");
+        }
+    }
 }
