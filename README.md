@@ -124,7 +124,3 @@ git push --set-upstream origin main
 
 **Contato / Suporte:**
 - Para dúvidas sobre a arquitetura ou fluxos de autenticação, abra uma issue no repositório ou envie mensagem para o mantenedor.
-
----
-
-Este README foi adicionado automaticamente — posso ajustar o conteúdo (mais detalhes de operação, exemplos de requests, documentação OpenAPI/Swagger) se desejar.
